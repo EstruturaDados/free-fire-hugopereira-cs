@@ -23,6 +23,8 @@ void limparBuffer();
 void adicionarItem(Item mochila[], int *totalItens);
 void removerItem(Item mochila[], int *totalItens);
 void listarItens(Item mochila[], int totalItens);
+int buscarItemPorNome(Item mochila[], int totalItens, const char* item); // Implementada no nível Aventureiro
+int buscarItemPorNome_aux(Item mochila[], const char* buscaNome, int inicio, int fim);
 
 // Função Principal
 int main() {
@@ -38,10 +40,12 @@ int main() {
     printf("Itens na mochila: %d/%d\n", totalItens, MAX_ITENS);
 
     do {
-        printf("\n-----Menu Principal-----\n");
+        printf("-----------------------------------------------\n");
+        printf("-----Menu Principal-----\n");
         printf("1. Adicionar Item (loot)\n");
         printf("2. Remover Item\n");
         printf("3. Listar Itens na Mochila\n");
+        printf("4. Buscar Item Por Nome\n");
         printf("0. Sair\n");
         printf("-----------------------------------------------\n");
         printf("Escolha uma opção: ");
@@ -51,12 +55,18 @@ int main() {
             case 1:
                 adicionarItem(mochila, &totalItens);
                 listarItens(mochila, totalItens);
+                printf("Pressione Enter para continuar...");
+                limparBuffer();
+                getchar();;
                 break;
             case 2:
                 removerItem(mochila, &totalItens);
                 break;
             case 3:
                 listarItens(mochila, totalItens);
+                break;
+            case 4:
+                buscarItemPorNome(mochila, totalItens, NULL);
                 break;
             case 0:
                 printf("\nSaindo do jogo... Até logo!\n");
@@ -89,7 +99,7 @@ void adicionarItem(Item mochila[], int *totalItens) {
     fgets(mochila[*totalItens].nome, TAM_NOME, stdin);
     mochila[*totalItens].nome[strcspn(mochila[*totalItens].nome, "\n")] = '\0';
 
-    printf("Tipo do item (arma, munição, cura, etc.): ");
+    printf("Tipo do item (arma, municao, cura, etc.): ");
     //limparBuffer();
     fgets(mochila[*totalItens].tipo, TAM_TIPO, stdin);
     mochila[*totalItens].tipo[strcspn(mochila[*totalItens].tipo, "\n")] = '\0';
@@ -147,7 +157,7 @@ void listarItens(Item mochila[], int totalItens) {
 
     printf("\n--- Itens na mochila ---\n");
     printf("------------------------------------------------------------\n");
-    printf("%-25s %-20s %s\n", "NOME","| TIPO", "| QUANTIDADE");
+    printf("%-25s | %-20s | %s\n", "NOME","TIPO", "QUANTIDADE");
     printf("------------------------------------------------------------\n");
 
     for (int i = 0; i < totalItens; i++) {
@@ -160,4 +170,51 @@ void listarItens(Item mochila[], int totalItens) {
     printf("------------------------------------------------------------\n");
     printf("Total de itens: %d/%d\n", totalItens, MAX_ITENS);
 
+}
+
+// Função para realizr a busca sequencial do item por nome
+int buscarItemPorNome(Item mochila[], int totalItens, const char* item) {
+    char buscaNome[TAM_NOME];
+
+    printf("Digite o nome do item que deseja buscar: ");
+    limparBuffer();
+    fgets(buscaNome, sizeof(buscaNome), stdin);
+
+    // Remove o '\n' que o fgets adciona
+    buscaNome[strcspn(buscaNome, "\n")] = '\0';
+    
+    // Chama a função recursiva auxiliar
+    int resultado = buscarItemPorNome_aux(mochila, buscaNome, 0, totalItens);
+
+    if (resultado != -1) {
+        printf("\n--- Item Encontrado! ---\n");
+        printf("Nome: %s\n", mochila[resultado].nome);
+        printf("Tipo: %s\n", mochila[resultado].tipo);
+        printf("Quantidade: %d\n", mochila[resultado].quantidade);
+        printf("-----------------------------------------------\n");
+    } else {
+        printf("\nItem '%s' não encontrado.\n", buscaNome);
+    }
+
+    printf("Pressione Enter para continuar...");
+    getchar();;
+
+    return resultado;
+}
+
+// Função auxiliar que implementa toda a lógica recursiva da busca sequencial
+int buscarItemPorNome_aux(Item mochila[], const char* buscaNome, int inicio, int fim) {
+    // CASO BASE!: FALHA - Nome não encontrado
+    if (inicio >= fim) {
+        return -1;
+    }
+
+    // CASO BASE 2: ENCONTROU O ITEM
+    // Compara o item na posição 'indice' atual com o item procurado.
+    if (strcmp(mochila[inicio].nome, buscaNome) == 0) {
+        return inicio;
+    }
+
+    // CASO RECURSIVO: Caso não encontre, busca no próximo índice
+    return buscarItemPorNome_aux(mochila, buscaNome, inicio + 1, fim);
 }
